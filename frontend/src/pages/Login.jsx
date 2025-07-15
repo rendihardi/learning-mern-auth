@@ -49,7 +49,7 @@ const Login = () => {
       });
 
       toast.success("Register berhasil! Silakan login.");
-      getUserData();
+      await getUserData();
       navigate("/");
     } catch (error) {
       const errorMessage =

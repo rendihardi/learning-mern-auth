@@ -130,7 +130,7 @@ export const logout = async (req, res, next) => {
       maxAge: 24 * 60 * 60 * 1000,
     });
     res.status(200).json({
-      status: "Success",
+      success: true,
       data: null,
     });
   } catch (error) {
@@ -166,7 +166,7 @@ export const sendVerifyOtp = async (req, res, next) => {
     await transporter.sendMail(mailOption);
 
     res.status(200).json({
-      status: "Success",
+      success: true,
       message: "OTP berhasil dikirim ke email",
     });
   } catch (error) {
@@ -204,7 +204,7 @@ export const verifyEmail = async (req, res, next) => {
     await user.save();
 
     res.status(200).json({
-      status: "Success",
+      success: true,
       message: "Email berhasil diverifikasi",
       data: {
         user,
@@ -218,7 +218,7 @@ export const verifyEmail = async (req, res, next) => {
 export const isAuthenticated = async (req, res, next) => {
   try {
     return res.status(200).json({
-      status: "Success : true",
+      success: true,
       data: {
         user: req.userId,
       },

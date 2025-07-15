@@ -4,8 +4,6 @@ import { AppContext } from "../context/AppContext";
 
 const Header = () => {
   const { userData } = useContext(AppContext);
-  console.log(userData.name); // "rendiarta"
-  console.log(userData.isVerified); // false
 
   return (
     <div className="flex flex-col items-center mt-10 px-4 text-center">
