@@ -63,7 +63,7 @@ export const register = async (req, res, next) => {
 
     // Kirim response
     res.status(201).json({
-      status: "Success",
+      success: true,
       data: {
         user,
       },
@@ -110,7 +110,7 @@ export const login = async (req, res, next) => {
       maxAge: 24 * 60 * 60 * 1000,
     });
     res.status(200).json({
-      status: "Success",
+      success: true,
       data: {
         user,
         accessToken: token,
@@ -251,7 +251,7 @@ export const sendResetOtp = async (req, res, next) => {
     };
     await transporter.sendMail(mailOption);
     res.status(200).json({
-      status: "Success",
+      success: true,
       message: "OTP berhasil dikirim ke email",
     });
   } catch (error) {}
@@ -281,7 +281,7 @@ export const resetPassword = async (req, res, next) => {
     user.resetOtpExpireAt = 0;
     await user.save();
     res.status(200).json({
-      status: "Success",
+      success: true,
       message: "Password berhasil direset",
     });
   } catch (error) {

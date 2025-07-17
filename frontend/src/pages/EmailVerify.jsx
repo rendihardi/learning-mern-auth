@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useEffect, useContext } from "react";
 import { assets } from "../assets/assets";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -10,7 +10,7 @@ const EmailVerify = () => {
 
   axios.defaults.withCredentials = true;
 
-  const { backendUrl, isLogin, setIsLogin, getUserData } =
+  const { backendUrl, isLogin, setIsLogin, getUserData, userData } =
     useContext(AppContext);
 
   const inputRef = React.useRef([]);
@@ -64,6 +64,12 @@ const EmailVerify = () => {
     }
   };
 
+  useEffect(() => {
+    if (isLogin && userData?.isVerified) {
+      navigate("/");
+    }
+  }, [isLogin, userData, navigate]);
+
   return (
     <div className="items-center flex justify-center min-h-screen px-6 sm:px-0 bg-gradient-to-br from-blue-200 to-purple-400">
       <img
@@ -82,7 +88,7 @@ const EmailVerify = () => {
         <p className="text-center mb-6 text-indigo-400">
           Enter the OTP sent to your email
         </p>
-        <div className="flex justify-between mb-8 " onPaste={handlePaste}>
+        <div className="flex justify-between mb-8 ">
           {Array(6)
             .fill(0)
             .map((_, index) => (
@@ -95,6 +101,7 @@ const EmailVerify = () => {
                 ref={(el) => (inputRef.current[index] = el)}
                 onInput={(e) => handleInput(e, index)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
+                onPaste={handlePaste}
               ></input>
             ))}
         </div>
