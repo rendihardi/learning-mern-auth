@@ -1,3 +1,4 @@
+// Login.jsx (Authorization Code Flow with Google)
 import React, { createContext, useContext } from "react";
 import { useState } from "react";
 import { assets } from "../assets/assets";
@@ -5,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { AppContext } from "../context/AppContext";
+import LoginGoogle from "../components/LoginGoogle";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -18,22 +20,18 @@ const Login = () => {
     e.preventDefault();
     try {
       axios.defaults.withCredentials = true;
-
       await axios.post(`${backendUrl}/api/auth/login`, {
         email,
         password,
       });
-
-      setIsLogin(true); // dari context / state global
-
-      await getUserData(); // ✅ Tunggu userData terisi dulu
-
+      setIsLogin(true);
+      await getUserData();
       toast.success("Login berhasil!");
-      navigate("/"); // ✅ Pindah halaman setelah data lengkap
+      navigate("/");
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "Login failed. Please try again.";
-      toast.error(errorMessage); // akan tampil: "Invalid password", dsb
+      toast.error(errorMessage);
     }
   };
 
@@ -41,13 +39,11 @@ const Login = () => {
     e.preventDefault();
     try {
       axios.defaults.withCredentials = true;
-
       await axios.post(`${backendUrl}/api/auth/register`, {
         name,
         email,
         password,
       });
-
       toast.success("Register berhasil! Silakan login.");
       await getUserData();
       navigate("/");
@@ -56,6 +52,10 @@ const Login = () => {
         error.response?.data?.message || "Sign up failed. Please try again.";
       toast.error(errorMessage);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    window.location.href = `${backendUrl}/api/auth/google`;
   };
 
   return (
@@ -70,7 +70,7 @@ const Login = () => {
         <h2 className="text-3xl font-semibold text-white text-center mb-3">
           {state === "Sign Up" ? "Sign Up" : "Sign In"}
         </h2>
-        <p className="tesxt-sm text-center mb-6">
+        <p className="text-sm text-center mb-6">
           {state === "Sign Up"
             ? "Create Your Account"
             : "Login to your account !"}
@@ -114,10 +114,20 @@ const Login = () => {
           >
             Forgot Password ?
           </p>
-          <button className=" cursor-pointer w-full py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-900 text-white font-medium">
+          <button className="cursor-pointer w-full py-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-900 text-white font-medium">
             {state}
           </button>
         </form>
+
+        {/* <button
+          onClick={handleGoogleLogin}
+          className="w-full mt-4 py-2.5 rounded-full bg-white text-black font-medium flex items-center justify-center gap-2"
+        >
+          <img src={assets.google_icon} alt="" className="w-5 h-5" />
+          Continue with Google
+        </button> */}
+        <LoginGoogle />
+
         {state === "Sign Up" ? (
           <p className="text-center text-gray-400 mt-4 text-xs">
             Already have an account?{" "}

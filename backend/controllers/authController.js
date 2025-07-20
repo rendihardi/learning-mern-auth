@@ -3,6 +3,159 @@ import jwt from "jsonwebtoken";
 import ApiError from "../utils/ApiError.js";
 import userModel from "../models/usersModel.js";
 import { transporter } from "../config/nodemailer.js";
+import { oauth2Client, getAuthUrl } from "../config/googleAuth.js";
+import { google } from "googleapis";
+
+import { OAuth2Client } from "google-auth-library";
+
+// Google Popup
+
+const client = new OAuth2Client();
+
+export const googlePopup = async (req, res, next) => {
+  try {
+    const { access_token } = req.body;
+
+    // Verifikasi token & dapatkan info user
+    const ticket = await client.getTokenInfo(access_token);
+    const { email } = ticket;
+
+    // Set token di client untuk ambil data lengkap user
+    client.setCredentials({ access_token });
+    const oauth2 = google.oauth2({ auth: client, version: "v2" });
+    const { data } = await oauth2.userinfo.get();
+    const { name, picture } = data;
+
+    // Cari atau buat user di DB
+    let user = await userModel.findOne({ email });
+    if (!user) {
+      user = await userModel.create({
+        name,
+        email,
+        password: null,
+        isVerified: true,
+        service: "google",
+      });
+    }
+
+    // Buat JWT token
+    const token = jwt.sign(
+      {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+      },
+      process.env.ACCES_TOKEN_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    // Kirim token ke browser via cookie
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        user,
+        accessToken: token,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    next(new ApiError("Google login gagal", 500));
+  }
+};
+
+// Google Auth code flow
+// export const googleLogin = (req, res) => {
+//   const url = getAuthUrl();
+//   res.redirect(url);
+// };
+
+// export const googleCallback = async (req, res, next) => {
+//   try {
+//     const { code } = req.query;
+//     const { tokens } = await oauth2Client.getToken(code);
+//     oauth2Client.setCredentials(tokens);
+
+//     const oauth2 = google.oauth2({
+//       auth: oauth2Client,
+//       version: "v2",
+//     });
+
+//     const { data } = await oauth2.userinfo.get();
+//     const { email, name, picture } = data;
+
+//     let user = await userModel.findOne({ email });
+//     if (!user) {
+//       user = await userModel.create({
+//         name,
+//         email,
+//         password: null,
+//         service: "google",
+//         isVerified: true,
+//       });
+//     }
+
+//     // LEBIH SEDERHANA
+//     // const payload = {
+//     //   user: {
+//     //     id: user.id,
+//     //     name: user.name,
+//     //     email: user.email,
+//     //   },
+//     // };
+//     // const secret = process.env.ACCES_TOKEN_SECRET;
+//     // const token = jwt.sign(payload, secret, { expiresIn: "1d" });
+
+//     const token = jwt.sign(
+//       {
+//         id: user.id,
+//         name: user.name,
+//         email: user.email,
+//       },
+//       process.env.ACCES_TOKEN_SECRET,
+//       {
+//         expiresIn: "1d",
+//       }
+//     );
+
+//     res.cookie("token", token, {
+//       httpOnly: true,
+//       secure: process.env.NODE_ENV === "production",
+//       sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+//       maxAge: 24 * 60 * 60 * 1000,
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       data: {
+//         user,
+//         accessToken: token,
+//       },
+//     });
+
+//     // const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+//     //   expiresIn: "7d",
+//     // });
+
+//     // res.cookie("token", token, {
+//     //   httpOnly: true,
+//     //   secure: process.env.NODE_ENV === "production",
+//     // });
+
+//     res.redirect(`${process.env.FRONTEND_URL}`);
+//   } catch (err) {
+//     console.error(err);
+//     next(new ApiError(err.message, 500));
+//   }
+// };
+
+// MANUAL
 
 export const register = async (req, res, next) => {
   const { name, email, password } = req.body;
@@ -66,6 +219,7 @@ export const register = async (req, res, next) => {
       success: true,
       data: {
         user,
+        accessToken: token,
       },
     });
   } catch (err) {
