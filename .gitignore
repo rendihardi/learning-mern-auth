@@ -1,2 +1,5 @@
+# Ini benar dan direkomendasikan:
 **/.env
-**/.node_modules
+
+# Ini SALAH, harus:
+**/node_modules/
